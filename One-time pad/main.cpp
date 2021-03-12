@@ -1,5 +1,4 @@
 #include "OtpLib.h"
-#include <pthread.h>
 
 //TODO structurise this project
 //TODO also replace 'iostream' with 'C' lib for formated output
@@ -17,7 +16,17 @@ int main(int argc, char *argv[]){
     int inFileFd = open(globalOptions.inFilePath, O_RDONLY);
     if(!wBuffer.readFile(inFileFd)) exit(EXIT_FAILURE);
 
-    //workerBuffer struct for next instractions
+    pthread_t lcgThread;
+    PRNGInfo prngInfo;
+    prngInfo._seed = &globalOptions.seedData;
+    prngInfo.rngLength = wBuffer.readingFileSize;
+
+    int tCreateRes = pthread_create(&lcgThread, nullptr, generatePRNG, &prngInfo);
+
+    if(tCreateRes == 0)
+        pthread_join(lcgThread, nullptr);
+
+    //use workerBuffer struct for next instractions
     //create 'numCPU' threads
     //to parallel the Vernams encoding process 
     //while workers calculating new result main thread must be stoped!!!
@@ -26,5 +35,6 @@ int main(int argc, char *argv[]){
 
     std::cout << "Done!"<< std::endl;
     wBuffer.closeBuffer();
+    delete[] prngInfo.prng;
     return 0;
 }

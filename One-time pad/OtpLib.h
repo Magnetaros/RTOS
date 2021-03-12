@@ -7,6 +7,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <pthread.h>
+
 
 struct seed{
     int x0;
@@ -33,8 +35,15 @@ struct workersBuffer{
     bool readFile(int fd);
 };
 
+struct PRNGInfo{
+    seed* _seed;
+    size_t rngLength;
+    size_t* prng = nullptr;
+};
+
 options loadArgs(int argc, char** argv);
 void threadFunc(void *args);
+void *generatePRNG(void *context);
 
 #endif // 
 
