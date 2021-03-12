@@ -1,10 +1,11 @@
 #include "OtpLib.h"
+#include <string>
 
 using namespace std;
 
 options loadArgs(int argc, char** argv) {
     options optStruct;
-    const char *optTemp = "i:o:x:a:c:m:";
+    const char* optTemp = "i:o:x:a:c:m:";
     int opt;
 
     while((opt = getopt(argc, argv, optTemp)) != -1){
@@ -22,6 +23,7 @@ options loadArgs(int argc, char** argv) {
             break;
         case 'x':
             optStruct.seedData.x0 = atoi(optarg);
+            cout << "X0: " << optStruct.seedData.x0 << endl;
             break;
         case 'a':
             optStruct.seedData.a = atoi(optarg);
@@ -46,14 +48,28 @@ options loadArgs(int argc, char** argv) {
 }
 
 
-void threadFunc(void *args) {
+void* encode(void* workerContext) {
     //Workers thread for calculating Vernam's encode
+    auto context = (workersContext*)workerContext;
+    string result = "";
+
+    for (size_t i = context->startIndex;; i++){
+        if(context->input[i] == NULL)
+            break;
+
+        char c = context->input[i] ^ (char)context->prngPtr[i];
+        result += c;
+    }
+    
+    cout << "Thread id: " << pthread_self() << ", result:= " << result << endl;
+
+    pthread_barrier_wait(context->barrier);
+    return reinterpret_cast<void*>(&result);
 }
 
 
 void workersBuffer::closeBuffer() {
     if(this->inputFileBuffer != nullptr) delete[] this->inputFileBuffer;
-    if(this->outputFileBuffer != nullptr) delete[] this->outputFileBuffer;
 
     //if fd is open close it!!!
 }
@@ -64,7 +80,6 @@ bool workersBuffer::readFile(int fd) {
     this->readingFileSize = lseek(this->inputFd, 0, SEEK_END);
     lseek(this->inputFd, 0, 0); // Reset pointer to start
     this->inputFileBuffer = new char[this->readingFileSize];
-    this->outputFileBuffer = new char[this->readingFileSize];
     size_t fdReadRes = read(this->inputFd, (void*)this->inputFileBuffer, this->readingFileSize);
 
     if(fdReadRes == -1 || fdReadRes != this->readingFileSize){
@@ -79,7 +94,18 @@ bool workersBuffer::readFile(int fd) {
     return true;
 }
 
-void* generatePRNG(void *context) {
+
+bool workersBuffer::writeFile(int fd) {
+    this->outputFd = fd;
+
+    ssize_t writeRes = write(this->outputFd, reinterpret_cast<void*>(&this->outputFileBuffer), this->readingFileSize);
+    close(this->outputFd);
+
+    return writeRes == this->readingFileSize;
+}
+
+
+void* generatePRNG(void* context) {
     auto con = (PRNGInfo*)context;
     if(con->prng == nullptr) con->prng = new size_t[con->rngLength];
     int x0 = con->_seed->x0;
@@ -89,6 +115,6 @@ void* generatePRNG(void *context) {
         x0 = (con->_seed->a * x0 + con->_seed->c)%con->_seed->m;
     }
 
-    return NULL;
+    return nullptr;
 }
 

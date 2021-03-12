@@ -27,12 +27,20 @@ struct workersBuffer{
     int inputFd,
         outputFd;
     off_t readingFileSize;
-    size_t counter;
     char* inputFileBuffer = nullptr;
-    char* outputFileBuffer = nullptr;
+    std::string outputFileBuffer = "";
 
     void closeBuffer();
     bool readFile(int fd);
+    bool writeFile(int fd);
+};
+
+struct workersContext{
+    pthread_t threadId;
+    pthread_barrier_t* barrier;
+    size_t* prngPtr;
+    char* input;
+    size_t startIndex; 
 };
 
 struct PRNGInfo{
@@ -42,8 +50,8 @@ struct PRNGInfo{
 };
 
 options loadArgs(int argc, char** argv);
-void threadFunc(void *args);
-void *generatePRNG(void *context);
+void* encode(void* workerContext);
+void* generatePRNG(void* context);
 
 #endif // 
 
