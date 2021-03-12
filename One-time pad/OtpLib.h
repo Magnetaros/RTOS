@@ -33,9 +33,7 @@ struct workersBuffer{
     bool readFile(int fd);
 };
 
-static options globalOptions;
-
-void loadArgs(int argc, char** argv);
+options loadArgs(int argc, char** argv);
 void threadFunc(void *args);
 
 #endif // 

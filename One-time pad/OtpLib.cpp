@@ -2,7 +2,9 @@
 
 using namespace std;
 
-void loadArgs(int argc, char** argv) {
+options loadArgs(int argc, char** argv) {
+    options optStruct;
+
     const char *optTemp = "i:o:x:a:c:m:";
     int opt;
 
@@ -15,22 +17,22 @@ void loadArgs(int argc, char** argv) {
 
         switch (opt){
         case 'i':
-            globalOptions.inFilePath = optarg;
+            optStruct.inFilePath = optarg;
             break;
         case 'o':
-            globalOptions.outFilePath = optarg;
+            optStruct.outFilePath = optarg;
             break;
         case 'x':
-            globalOptions.seedData.x0 = atoi(optarg);
+            optStruct.seedData.x0 = atoi(optarg);
             break;
         case 'a':
-            globalOptions.seedData.a = atoi(optarg);
+            optStruct.seedData.a = atoi(optarg);
             break;
         case 'c':
-            globalOptions.seedData.c = atoi(optarg);
+            optStruct.seedData.c = atoi(optarg);
             break;
         case 'm':
-            globalOptions.seedData.m = atoi(optarg);
+            optStruct.seedData.m = atoi(optarg);
             break;
         case '?':
             cerr << "option " << argv[optind] << " need an argument!!" << endl;
@@ -41,6 +43,8 @@ void loadArgs(int argc, char** argv) {
             break;
         }
     }
+
+    return optStruct;
 }
 
 
@@ -60,10 +64,12 @@ void workersBuffer::closeBuffer() {
 bool workersBuffer::readFile(int fd) {
     this->inputFd = fd;
     this->readingFileSize = lseek(this->inputFd, 0, SEEK_END);
+    lseek(this->inputFd, 0, 0); // Reset pointer
     this->inputFileBuffer = new char[this->readingFileSize];
     size_t fdReadRes = read(this->inputFd, (void*)this->inputFileBuffer, this->readingFileSize);
 
     cout << "Created buffer with size of "<< sizeof(this->inputFileBuffer) << " bytes" << endl;
+    cout << "Buffer content: " << this->inputFileBuffer << endl;
 
     if(fdReadRes == -1 || fdReadRes != this->readingFileSize){
         cerr << "Read result: " << fdReadRes << ", file size: "<< this->readingFileSize << endl;
