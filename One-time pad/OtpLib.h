@@ -34,6 +34,7 @@ struct workersContext{
 };
 
 struct PRNGInfo{
+    pthread_t threadId;
     seed* _seed;
     size_t rngLength;
     int* prng = nullptr;

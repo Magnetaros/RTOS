@@ -1,6 +1,9 @@
 #include "OtpLib.h"
 
 //TODO also replace 'iostream' with 'C' lib for formated output
+//TODO add google tests to confirm functionality
+//! input.txt and temp.txt different after 'make decode'
+//! in temp.txt text duplicates, issue in writing in file or problem in saperating input text into chuncks  
 
 static pthread_barrier_t barrier;
 char* testInputBuffer = "Some random text here";

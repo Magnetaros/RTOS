@@ -44,20 +44,17 @@ options loadArgs(int argc, char** argv) {
 
 
 void* encode(void* workerContext) {
-    cout << "Encoding thread: " << pthread_self() << " start" << endl;
     auto context = (workersContext*)workerContext;
     char* prng = reinterpret_cast<char*>(context->prngPtr);
     size_t bufferSize = context->endIndex - context->startIndex;
     string result = "";
 
-    cout << "Encoding thread: " << pthread_self() << " start encoding" << endl;
     for (size_t i = context->startIndex; i < context->endIndex; i++){
         result += (context->input[i] ^ prng[i]);
     }
     
     context->res = result;
 
-    cout << "Encoding thread: " << pthread_self() << " exited success" << endl;
     pthread_barrier_wait(context->barrier);
     return nullptr;
 }
