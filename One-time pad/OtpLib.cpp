@@ -38,7 +38,6 @@ options loadArgs(int argc, char** argv) {
         }
     }
 
-    cout << "Args loaded" << endl;
     return optStruct;
 }
 
@@ -47,14 +46,11 @@ void* encode(void* workerContext) {
     auto context = (workersContext*)workerContext;
     char* prng = reinterpret_cast<char*>(context->prngPtr);
     size_t bufferSize = context->endIndex - context->startIndex;
-    string result = "";
 
     for (size_t i = context->startIndex; i < context->endIndex; i++){
-        result += (context->input[i] ^ prng[i]);
+        context->res += (context->input[i] ^ prng[i]);
     }
     
-    context->res = result;
-
     pthread_barrier_wait(context->barrier);
     return nullptr;
 }
@@ -82,7 +78,6 @@ off_t readFd(int fd, char* &inputBuffer) {
         bytesToRead -= fdReadRes;
     }while(bytesToRead != 0);
 
-    cout << "File read success!" << endl;
     return _fstat.st_size;
 }
 
@@ -101,7 +96,6 @@ bool writeFd(int fd, char* &outputBuffer, size_t numByteToWrite) {
     } while (bytesToWrite != 0);
     close(fd);
 
-    cout << "Writing success" << endl;
     return true;
 }
 
@@ -116,6 +110,5 @@ void* generatePRNG(void* context) {
         x0 = (con->_seed->a * x0 + con->_seed->c)%con->_seed->m;
     }
 
-    cout << "PRNG created!" << endl;
     return nullptr;
 }

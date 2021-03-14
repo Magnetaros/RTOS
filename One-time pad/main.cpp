@@ -1,14 +1,7 @@
 #include "OtpLib.h"
 
-//TODO also replace 'iostream' with 'C' lib for formated output
-//TODO add google tests to confirm functionality
-//! input.txt and temp.txt different after 'make decode'
-//! in temp.txt text duplicates, issue in writing in file or problem in saperating input text into chuncks  
-
 static pthread_barrier_t barrier;
-char* testInputBuffer = "Some random text here";
-char* testOuputBuffer = "";
-char* testDecodeBuffer = "";
+//! need to fix sigf error
 
 int main(int argc, char* argv[]){
     int numCPU = sysconf(_SC_NPROCESSORS_ONLN);
@@ -48,9 +41,8 @@ int main(int argc, char* argv[]){
     pthread_barrier_wait(&barrier);
 
     std::string encodedText;
-    for(int i = 0; i < numCPU; i++){
-        encodedText += wContexts->res;
-    }
+    for(int i = 0; i < numCPU; i++)
+        encodedText += wContexts[i].res;
     outputText = const_cast<char*>(encodedText.c_str());
 
     int outFileFd = open(globalOptions.outFilePath, O_WRONLY);
