@@ -23,35 +23,27 @@ struct options{
     seed seedData;
 };
 
-struct workersBuffer{
-    int inputFd,
-        outputFd;
-    off_t readingFileSize;
-    char* inputFileBuffer = nullptr;
-    std::string outputFileBuffer = "";
-
-    void closeBuffer();
-    bool readFile(int fd);
-    bool writeFile(int fd);
-};
-
 struct workersContext{
     pthread_t threadId;
     pthread_barrier_t* barrier;
-    size_t* prngPtr;
+    int* prngPtr;
     char* input;
+    std::string res;
     size_t startIndex; 
+    size_t endIndex;
 };
 
 struct PRNGInfo{
     seed* _seed;
     size_t rngLength;
-    size_t* prng = nullptr;
+    int* prng = nullptr;
 };
 
 options loadArgs(int argc, char** argv);
 void* encode(void* workerContext);
 void* generatePRNG(void* context);
+off_t readFd(int fd, char* &inputBuffer);
+bool writeFd(int fd, char* &outputBuffer, size_t numByteToWrite);
 
 #endif // 
 
