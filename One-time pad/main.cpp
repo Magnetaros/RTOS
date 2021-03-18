@@ -30,7 +30,6 @@ int main(int argc, char* argv[]){
 
     size_t chunckSize = rFileSize / numCPU;
     size_t fileEndOffset = rFileSize - (chunckSize * numCPU);
-    std::cout << "File size: " << rFileSize << ", max chunck size: " << chunckSize * numCPU << ", file offset: " << fileEndOffset << std::endl;
 
     for (size_t i = 0; i < numCPU; i++){
         wContexts[i].barrier    = &barrier;
