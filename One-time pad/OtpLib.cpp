@@ -102,13 +102,13 @@ bool writeFd(int fd, char* &outputBuffer, size_t numByteToWrite) {
 
 void* generatePRNG(void* context) {
     auto con = (PRNGInfo*)context;
-    if(con->prng == nullptr) con->prng = new int[con->rngLength];
+    int* prng = new int[con->rngLength];
     int x0 = con->_seed->x0;
 
     for (size_t i = 0; i < con->rngLength; i++){
-        con->prng[i] = x0;
+        prng[i] = x0;
         x0 = (con->_seed->a * x0 + con->_seed->c)%con->_seed->m;
     }
 
-    return con->prng;
+    return prng;
 }

@@ -3,6 +3,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 #include <iostream>
 
 int main( int argc, char **argv ) 
@@ -11,7 +13,7 @@ int main( int argc, char **argv )
     int fd = open("/dev/cryptobbs", O_RDWR);
     if(fd < 0)
     {
-        std::cerr << "E: unable to open server connection: " << strerror(errno ) << std::endl;
+        std::cerr << "E: unable to open server connection: " << strerror(errno) << std::endl;
         return EXIT_FAILURE;
     }
 
