@@ -110,5 +110,5 @@ void* generatePRNG(void* context) {
         x0 = (con->_seed->a * x0 + con->_seed->c)%con->_seed->m;
     }
 
-    return nullptr;
+    return con->prng;
 }

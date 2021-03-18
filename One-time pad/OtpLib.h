@@ -9,7 +9,6 @@
 #include <fcntl.h>
 #include <pthread.h>
 
-
 struct seed{
     int x0;
     int a;
@@ -47,5 +46,3 @@ off_t readFd(int fd, char* &inputBuffer);
 bool writeFd(int fd, char* &outputBuffer, size_t numByteToWrite);
 
 #endif // 
-
-
