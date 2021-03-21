@@ -1,10 +1,10 @@
 #include "OtpLib.h"
-#include <string>
+#include <string.h>
 
 using namespace std;
 
-options loadArgs(int argc, char** argv) {
-    options optStruct;
+Options loadArgs(int argc, char** argv) {
+    Options optStruct;
     const char* optTemp = "i:o:x:a:c:m:";
     int opt;
 
@@ -43,12 +43,14 @@ options loadArgs(int argc, char** argv) {
 
 
 void* encode(void* workerContext) {
-    auto context = (workersContext*)workerContext;
+    auto context = (WorkersContext*)workerContext;
+    char* textToWorkWith;
     char* prng = reinterpret_cast<char*>(context->prngPtr);
     size_t bufferSize = context->endIndex - context->startIndex;
+    context->res = new char[bufferSize];
 
-    for (size_t i = context->startIndex; i < context->endIndex; i++){
-        context->res += (context->input[i] ^ prng[i]);
+    for (size_t i = context->startIndex, count = 0; i < context->endIndex; i++, count++){
+        context->res[count] = (context->input[i] ^ prng[i]);
     }
     
     pthread_barrier_wait(context->barrier);
@@ -56,18 +58,18 @@ void* encode(void* workerContext) {
 }
 
 off_t readFd(int fd, char* &inputBuffer) {
-    struct stat _fstat;
-    fstat(fd, &_fstat);
+    struct stat fStat;
+    fstat(fd, &fStat);
 
     if(inputBuffer == nullptr)
-        inputBuffer = new char[_fstat.st_size];
+        inputBuffer = new char[fStat.st_size];
 
-    size_t bytesToRead = _fstat.st_size;
+    size_t bytesToRead = fStat.st_size;
     do{
         size_t fdReadRes = read(fd, inputBuffer, bytesToRead);
 
         if(fdReadRes == -1){
-            cerr << "Read result: " << fdReadRes << ", file size: "<< _fstat.st_size << endl;
+            cerr << "Read result: " << fdReadRes << ", file size: "<< fStat.st_size << endl;
             cerr << "Couldn't read the input file stoping programm" << endl;
 
             delete inputBuffer;
@@ -78,7 +80,7 @@ off_t readFd(int fd, char* &inputBuffer) {
         bytesToRead -= fdReadRes;
     }while(bytesToRead != 0);
 
-    return _fstat.st_size;
+    return fStat.st_size;
 }
 
 
@@ -94,7 +96,6 @@ bool writeFd(int fd, char* &outputBuffer, size_t numByteToWrite) {
         }
         bytesToWrite -= writeRes;
     } while (bytesToWrite != 0);
-    close(fd);
 
     return true;
 }
@@ -103,11 +104,11 @@ bool writeFd(int fd, char* &outputBuffer, size_t numByteToWrite) {
 void* generatePRNG(void* context) {
     auto con = (PRNGInfo*)context;
     int* prng = new int[con->rngLength];
-    int x0 = con->_seed->x0;
+    int x0 = con->seed->x0;
 
     for (size_t i = 0; i < con->rngLength; i++){
         prng[i] = x0;
-        x0 = (con->_seed->a * x0 + con->_seed->c)%con->_seed->m;
+        x0 = (con->seed->a * x0 + con->seed->c)%con->seed->m;
     }
 
     return prng;

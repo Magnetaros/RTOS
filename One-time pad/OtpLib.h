@@ -9,37 +9,37 @@
 #include <fcntl.h>
 #include <pthread.h>
 
-struct seed{
+struct Seed{
     int x0;
     int a;
     int c;
     int m;
 };
 
-struct options{
+struct Options{
     char* inFilePath;
     char* outFilePath;
-    seed seedData;
+    Seed seedData;
 };
 
-struct workersContext{
+struct WorkersContext{
     pthread_t threadId;
     pthread_barrier_t* barrier;
     int* prngPtr;
     char* input;
-    std::string res;
+    char* res;
     size_t startIndex; 
     size_t endIndex;
 };
 
 struct PRNGInfo{
     pthread_t threadId;
-    seed* _seed;
+    Seed* seed;
     size_t rngLength;
     int* prng = nullptr;
 };
 
-options loadArgs(int argc, char** argv);
+Options loadArgs(int argc, char** argv);
 void* encode(void* workerContext);
 void* generatePRNG(void* context);
 off_t readFd(int fd, char* &inputBuffer);

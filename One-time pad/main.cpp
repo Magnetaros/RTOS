@@ -1,16 +1,14 @@
 #include "OtpLib.h"
 
-static pthread_barrier_t barrier;
-//! need to fix sigf error
-
 int main(int argc, char* argv[]){
+    pthread_barrier_t barrier;
     off_t rFileSize;
     char* inputText  = nullptr;
     char* outputText = nullptr;
     int numCPU = sysconf(_SC_NPROCESSORS_ONLN);
-    workersContext wContexts[numCPU];
+    WorkersContext wContexts[numCPU];
 
-    options globalOptions = loadArgs(argc, argv);
+    Options globalOptions = loadArgs(argc, argv);
 
     int inFileFd = open(globalOptions.inFilePath, O_RDONLY);
     rFileSize = readFd(inFileFd, inputText);
@@ -18,7 +16,7 @@ int main(int argc, char* argv[]){
     pthread_t lcgThread;
     void *prngResult;
     PRNGInfo prngInfo;
-    prngInfo._seed     = &globalOptions.seedData;
+    prngInfo.seed      = &globalOptions.seedData;
     prngInfo.rngLength = rFileSize;
 
     int tCreateRes = pthread_create(&lcgThread, nullptr, generatePRNG, &prngInfo);
@@ -26,8 +24,11 @@ int main(int argc, char* argv[]){
     if(tCreateRes == 0){
         pthread_join(lcgThread, &prngResult);
         prngInfo.prng = (int*)prngResult;
+    }else{
+        std::cerr << "Couldn't created a thread for LCG method" << std::endl;
+        if(prngInfo.prng != nullptr) delete[] prngInfo.prng;
+        return EXIT_FAILURE;
     }
-
 
     pthread_barrier_init(&barrier, nullptr, numCPU + 1);
 
@@ -46,15 +47,16 @@ int main(int argc, char* argv[]){
     }
 
     pthread_barrier_wait(&barrier);
-
-    std::string encodedText;
-    for(int i = 0; i < numCPU; i++)
-        encodedText += wContexts[i].res;
-    outputText = const_cast<char*>(encodedText.c_str());
+    pthread_barrier_destroy(&barrier);
 
     int outFileFd = open(globalOptions.outFilePath, O_WRONLY);
-    if(outFileFd == -1 || !writeFd(outFileFd, outputText, rFileSize))
-        std::cerr << "Error writing encoded text to a file" << std::endl;
+    for (size_t i = 0; i < numCPU; i++){
+        size_t bytesToWrite = wContexts[i].endIndex - wContexts[i].startIndex;
+        if(outFileFd == -1 || !writeFd(outFileFd, wContexts[i].res, bytesToWrite))
+            std::cerr << "Error writing encoded text to a file" << std::endl;    
+        delete[] wContexts[i].res;
+    }
+    close(outFileFd);
 
     std::cout << "Done!" << std::endl;
     delete[] inputText;
